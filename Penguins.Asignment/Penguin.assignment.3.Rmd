@@ -1,0 +1,196 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+Installing the packages: 
+
+```{r}
+
+#install.packages("ggplot2")
+#install.packages("palmerpenguins")
+#install.packages("janitor")
+#install.packages("dplyr")
+#install.packages("tinytex")
+
+```
+
+Loading the packages: 
+
+```{r}
+library(ggplot2)
+library(palmerpenguins)
+library(janitor)
+library(dplyr)
+library(tinytex)
+
+```
+Sourcing my functions: 
+
+```{r}
+source("Functions/Cleaning.functions.R")
+source("Functions/Graph.function.R")
+source("Functions/plotting.R")
+
+```
+
+
+Observing the raw data: 
+
+```{r}
+
+
+head(penguins_raw)
+```
+
+Blotting a bad graph with the raw data 
+
+Plotting a bad graph: 
+
+```{r, echo=FALSE}
+
+
+write.csv(penguins_raw, "Data/penguins_raw.csv")
+
+penguins_clean <- penguins_raw %>%
+    clean_function() %>%
+    shorten_species() %>%
+    remove_empty_columns_rows()
+
+
+#Saving my cleaned data: 
+
+write.csv(penguins_clean, "Data/penguins_clean.csv")
+
+
+
+# Define a custom color scale with very similar shades of red and orange
+my_colors <- c("#FF7F50", "#FF6347")
+
+penguin_barplot <- ggplot(data = penguins_clean, aes(x = sex, y = body_mass_g, fill = sex)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  scale_fill_manual(values = my_colors) +  # Use the custom color scale
+  labs(title = "", x = "", y = "Body Weight") + 
+  theme_minimal() + 
+  coord_cartesian(ylim = c(3000, 6500)) +
+  theme(panel.grid = element_blank()) +
+  guides(fill = FALSE)
+
+# Print the plot
+print(penguin_barplot)
+
+```
+
+
+
+
+
+I have drawn a cumulative bar graph which shows differences in body mass between male and female penguins by adding together the total body masses of all the penguins. Firstly, there is no title to my graph so there is no indication of what relationship between my two parameters my graph is showing. There is no indication that the data is about penguins and relating to the differences in body mass between the different sexes.  There is no title to my x axis, besides ‘male’ and ‘female,’ so the reader must infer that I am investigating difference in body mass between sexes. The title to my y axis ‘Body mass’ does not give a unit so there is no indication on how large the differences between the sexes are. I have also removed the grid lines from my background making it more difficult to assess how large the differences are. I have not calculated standard deviation or made these into error bars. I am therefore hiding elements of my data which may not be statistically significant. I have also not excluded NA values where an individuals sex was not recorded, but this has been included in my graph. This is irrelevant data and distracts readers from the main findings. I have also not included a figure legend, making it more difficult for the reader to realise which column applies to each sex. The colours of the male and female bars are very similar making them difficult to distinguish. They are also not color blind friendly, presenting accessibility issues. Finally, I have truncated the y axis so that it does not start at 0 but starts at 3000. In a study where participants observed both truncated and non truncated graphs, the differences in truncated graphs were found to be perceived as larger than the control graphs with a statistically significant difference. 
+
+References: 
+Yang, B. W., Vargas-Restrepo, C., Stanley, M. L., & Marsh, E. J. The Misleading Effect of Truncating Bar Graphs.
+
+Introduction: 
+
+My analysis will investigate how body mass in the palmer penguins varies with flipper length. The palmer penguins species are the Chinstrap species, the Gentoo penguins, and the Adelie penguins. I am investigating to see if there might be a correlation between increasing flipper length and body mass. My hypothesis is that as flipper length increases, body mass will increase, as a consequence of the general morphology and dimensions of the birds remaining the same as flipper length increases (instead of perhaps, torso size decreasing). I will use a linear regression model to find out if there is a positive linear relationship between increasing flipper length and body mass. 
+
+Cleaning my data: 
+
+First I must save the raw data: 
+
+
+```{r}
+write.csv(penguins_raw, "Data/penguins_raw.csv")
+
+```
+
+Cleaning my data: 
+
+```{r}
+penguins_clean <- penguins_raw %>%
+    clean_function() %>%
+    shorten_species() %>%
+    remove_empty_columns_rows()
+
+#The above are functions that I made to clean the data. I have stored the functions in a folder in my repository called Functions. The file is called Cleaning.Functions.R, where I have explained the purpose of each function. 
+
+
+#Saving my cleaned data: 
+
+write.csv(penguins_clean, "Data/penguins_clean.csv")
+
+
+```
+
+```{r}
+print(penguins_clean)
+
+```
+
+Exploratory plot: 
+
+```{r}
+#I made a function which makes my ggplot scatter plot. The function can be found in the file called Graph.function.R inside my functions folder in my repository. 
+penguin.scatterplot <- scatter.plot.flippers(penguins_clean)
+penguin.scatterplot
+
+```
+Size, scale and resolution: 
+```{r}
+#If the "ragg" package is not installed, install this package: 
+#install.packages("ragg")
+library(ragg)
+
+
+```
+
+Saving the png file: 
+
+```{r}
+
+save_scatter_plot_png(penguins_clean,
+                      "figures/scatter.png",
+                      size = 500, res = 300, scaling=0.25)
+```
+
+Creating vector images: 
+
+The image above is problematic because when you zoom in they are blurry because they are created by a matrix of pixels. 
+
+Saving my vector image: 
+
+```{r}
+#If the svg package is not installed: 
+library(svglite)
+#Saving the plot 
+save_flipper_plot_svg(penguins_clean, 
+                      "figures/scatter_vector.svg", 
+                      size = 15, scaling = 1)
+
+```
+
+
+
+Statistical tests: 
+
+
+
+```{r Statistics}
+
+#Creating a linear model for my two variables: 
+
+linear_model <- lm(body_mass_g ~ flipper_length_mm, data = penguins_clean)
+
+#Displaying the summary of the linear model: 
+
+summary(linear_model)
+
+```
+
+### Results & Discussion
+
+There is a positive linear relationship between flipper length in and body mass.
+The adjusted R squared value is 0.7583, which means that 75.8% of the variation in body mass can be explained by increasing flipper length. The p value is 2.2 x 10^-16. This value is < 0.05. This means that the linear relationship between flipper length and body mass is statistically significant. The gradient is 49.686 so for every mm that flipper length increases, body mass increases by 49.5g. 
+
+
+
